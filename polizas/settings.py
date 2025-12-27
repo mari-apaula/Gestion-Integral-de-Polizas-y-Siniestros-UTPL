@@ -126,3 +126,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'apppolizas.Usuario'
+
+LOGIN_URL = '/'

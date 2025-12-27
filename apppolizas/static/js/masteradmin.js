@@ -8,20 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 1. Verificación de seguridad global
     // Esto asegura que si alguien entra al dashboard sin token, sea expulsado
+
     const token = localStorage.getItem('access_token');
     if (!token) {
-        window.location.href = '/'; 
+        window.location.href = '/';
     }
 
     // 2. Lógica de Cerrar Sesión (Igual a la anterior)
     if (btnLogout) {
-        btnLogout.addEventListener('click', function() {
-            // Eliminar el token del almacenamiento local
+        btnLogout.addEventListener('click', async function () {
             localStorage.removeItem('access_token');
-            
-            alert('Sesión cerrada correctamente');
-            
-            // Redirigir a la pantalla de login
+            localStorage.removeItem('userRole');
+
+            // Avisar al backend que cierre la sesión
+            await fetch('/logout/');
+
             window.location.href = '/';
         });
     }

@@ -10,8 +10,8 @@ class Usuario(AbstractUser):
     ANALISTA = 'analista'
     
     TIPO_USUARIO_CHOICES = [
-        (ADMINISTRADOR, 'Administrador de Pólizas'),
-        (ANALISTA, 'Analista de Seguros'),
+        (ADMINISTRADOR, 'Administrador'),
+        (ANALISTA, 'Analista'),
     ]
 
     rol = models.CharField(

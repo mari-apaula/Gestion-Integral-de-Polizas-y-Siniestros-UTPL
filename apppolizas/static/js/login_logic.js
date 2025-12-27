@@ -1,47 +1,55 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('loginForm');
-    const errorDiv = document.getElementById('errorMessage');
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita que la URL cambie y la página se recargue
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Evitar el submit tradicional
+            const formData = new FormData(loginForm);
 
-        // Obtener datos
-        const formData = new FormData(form);
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // Extraemos el token CSRF de las cookies para que Django acepte la petición
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
 
-        // Limpiar errores previos
-        errorDiv.textContent = '';
+                const data = await response.json();
 
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': csrfToken
+                if (response.ok && data.success) {
+                    // Guardamos el token y el rol en el navegador
+                    localStorage.setItem('access_token', data.token);
+                    localStorage.setItem('userRole', data.rol);
+                    
+                    // Redirigimos según lo que diga el servidor
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.error || 'Credenciales incorrectas');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión con el servidor');
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // GUARDAR JWT
-                // Opción A: LocalStorage (Persistente)
-                localStorage.setItem('access_token', data.token);
-
-                window.location.href = '/dashboard-analista/';
-                
-                // Opción B: SessionStorage (Se borra al cerrar pestaña)
-                // sessionStorage.setItem('access_token', data.token);
-
-                alert('Login correcto. Token guardado.');
-                
-                // Redirigir al dashboard (ajusta la URL según tu proyecto)
-                window.location.href = '/dashboard-analista/'; 
-            } else {
-                errorDiv.textContent = data.error || 'Error desconocido';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            errorDiv.textContent = 'Ocurrió un error en la conexión.';
         });
-    });
+    }
 });
+
+// Función para obtener el CSRF token de las cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
