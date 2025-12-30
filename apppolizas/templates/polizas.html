@@ -1,54 +1,70 @@
-{% extends 'master/masteradmin.html' %}
+{% extends 'master/masteranalista.html' %}
 {% load static %}
 
 {% block title %}Gestión de Pólizas{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/gSide.css' %}" />
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
-<link rel="stylesheet" href="{% static 'css/poliza.css' %}" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    /* Estilo para los botones de acción alineados */
+    .btn-group-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    /* Consistencia con el color principal del sistema */
+    .btn-primary { background-color: #0d6efd; border-color: #0d6efd; }
+    
+    /* Estilo para los badges de estado similares a Usuarios */
+    .status-badge {
+        padding: 0.4em 0.8em;
+        border-radius: 50rem;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    .status-active { background-color: #d1e7dd; color: #0f5132; }
+    .status-inactive { background-color: #f8d7da; color: #842029; }
+</style>
 {% endblock %}
 
 {% block admin_content %}
-<div class="dashboard-scroll-container">
-    
-    <div class="dashboard-sections">
-        <div class="polizas-container">
-            
-            <div class="header-actions">
-                <h4>Listado de Pólizas</h4>
-                <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#crearPolizaModal">
-                    Nueva Póliza
-                </button>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Gestión de Pólizas</h3>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearPolizaModal">
+            <i class="fas fa-plus me-2"></i>Nueva Póliza
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+        {% endfor %}
+    {% endif %}
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
+    <div class="card shadow border-0">
+        <div class="card-body">
             <div class="table-responsive">
-                <table class="table-polizas">
-                    <thead>
+                <table id="tablaPolizas" class="table table-hover align-middle" style="width:100%">
+                    <thead class="table-light">
                         <tr>
                             <th>Nro. Póliza</th>
                             <th>Tipo</th>
-                            <th>Asegurado</th>
+                            <th>Monto Asegurado</th>
                             <th>Vigencia Fin</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for poliza in polizas %}
                         <tr>
-                            <td><strong>{{ poliza.numero_poliza }}</strong></td>
+                            <td class="fw-bold text-primary">{{ poliza.numero_poliza }}</td>
                             <td>{{ poliza.tipo_poliza }}</td>
-                            <td>${{ poliza.monto_asegurado }}</td>
+                            <td class="font-monospace">${{ poliza.monto_asegurado }}</td>
                             <td>{{ poliza.vigencia_fin|date:"d/m/Y" }}</td>
                             <td>
                                 <span class="status-badge {% if poliza.estado == 'Activa' %}status-active{% else %}status-inactive{% endif %}">
@@ -56,21 +72,20 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{% url 'poliza_update' poliza.id %}" class="btn-action" style="background-color: #3D36BF; color: white; margin-right: 5px; text-decoration: none; display: inline-block;">
-                                Editar
-                                </a>
-                                <form action="{% url 'poliza_delete' poliza.id %}" method="POST" class="form-delete">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn-action btn-delete" onclick="return confirm('¿Eliminar póliza?')">
-                                        Eliminar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr class="row-empty">
-                            <td colspan="6">
-                                No hay pólizas registradas.
+                                <div class="btn-group-actions">
+                                    <a href="{% url 'poliza_detail' poliza.id %}" class="btn btn-sm btn-outline-success" title="Ver Detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'poliza_update' poliza.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{% url 'poliza_delete' poliza.id %}" method="POST" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar póliza?')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -82,50 +97,55 @@
 </div>
 
 <div class="modal fade" id="crearPolizaModal" tabindex="-1" aria-hidden="true">
-<div class="modal-dialog modal-lg">
-    <div class="modal-content">
-    <form method="POST">
-        <div class="modal-header">
-            <h5 class="modal-title">Registrar Nueva Póliza</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        
-
-        <div class="modal-body">
-            {% csrf_token %}
-            <div class="form-grid">
-                {% for field in form %}
-                    {% if field.field.widget.input_type == 'checkbox' %}
-                        <div class="form-group switch-group">
-                            <div class="form-check form-switch custom-switch-container">
-                                {{ field }}
-                                <label class="form-check-label" for="{{ field.id_for_label }}">
-                                    {{ field.label }}
-                                </label>
-                            </div>
-                            {% if field.errors %}
-                                <div class="error-text">{{ field.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                    <div class="form-group">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Nueva Póliza</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'polizas_list' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
                             {{ field }}
                             {% if field.errors %}
-                                <div class="error-text">{{ field.errors|striptags }}</div>
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
                             {% endif %}
                         </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Póliza</button>
+                </div>
+            </form>
         </div>
-        
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary-custom">Guardar Póliza</button>
-        </div>
-    </form>
     </div>
 </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#tablaPolizas').DataTable({
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "responsive": true,
+            // "lf" añade el selector de longitud y el buscador arriba
+            "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rtip',
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+            "order": [[0, "asc"]] 
+        });
+    });
+</script>
 {% endblock %}

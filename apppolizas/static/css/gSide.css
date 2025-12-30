@@ -24,9 +24,10 @@ body {
 /* Sidebar (izquierda) */
 .menu {
   /*width: 100%; ELIMINADO - Conflictivo con Flexbox */
-  min-width: 400px; /* Ancho mínimo para el sidebar */
-  max-width: 400px; /* Ancho máximo para el sidebar */
-  flex-basis: 280px; /* Ancho preferido para el sidebar */
+  flex-basis: 20%; /* Define que el tamaño base sea el 20% */
+  width: 20%;      /* Asegura el ancho en diferentes motores de renderizado */
+  min-width: 200px; /* Opcional: un mínimo para que no se rompa en pantallas medianas */
+  max-width: 20%;   /* Evita que crezca más del 20% */
   flex-shrink: 0; /* IMPORTE: Evita que el sidebar se encoja */
   flex-grow: 0; /* IMPORTE: Evita que el sidebar crezca sin control */
   padding: 20px;
@@ -39,15 +40,13 @@ body {
 
 /* Contenido principal (derecha) */
 .main-content {
-  flex: 1;
+  flex: 1; /* Ocupará el 80% automáticamente */
   background-color: white;
   border-radius: 30px;
   padding: 25px;
   overflow-y: auto;
   box-sizing: border-box;
-  margin-left: 22.2%;
-
-  /* SOMBRA INTENSA HACIA LA IZQUIERDA */
+  margin-left: 0;
   box-shadow: -20px 20px 40px rgba(0, 0, 0, 0.3);
 }
 

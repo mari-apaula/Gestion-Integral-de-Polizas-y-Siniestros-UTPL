@@ -60,22 +60,7 @@
         {% endif %}
 
       </ul>
-    </nav>
-        <li class="{% if request.resolver_match.url_name == 'polizas_list' %}activo{% endif %}" style="width: 110%">
-          <a href="{% url 'polizas_list' %}">
-            <img src="{% static 'images/icono2.svg' %}" alt="Icono" class="icono-svg">
-            Polizas
-          </a>
-        </li>
-
-        <li class="{% if request.resolver_match.url_name == 'admin_socios' %}activo{% endif %}" style="width: 110%">
-          <a href="#">
-            <img src="{% static 'images/icono3.svg' %}" alt="Icono" class="icono-svg">
-            Siniestros
-          </a>
-        </li>
-      </ul>
-    </nav>
+    
     <button type="button" id="btnLogout" class="boton"
       style="margin-right: 80px; margin-bottom: 20px; margin-left: 32px;">
       Cerrar Sesión

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Poliza
+from .models import Poliza, Siniestro
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -45,3 +45,86 @@ class PolizaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.estado == 'Activa':
             self.initial['estado'] = True
+
+
+# SINIESTRO FORM
+
+
+class SiniestroForm(forms.ModelForm):
+    class Meta:
+        model = Siniestro
+        exclude = [
+            'usuario_gestor',
+            'fecha_notificacion',
+            'estado_tramite',
+            'valor_reclamo',
+            'deducible_aplicado',
+            'depreciacion',
+            'valor_a_pagar',
+        ]
+
+        widgets = {
+            'fecha_siniestro': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo_siniestro': forms.TextInput(attrs={'class': 'form-control'}),
+            'ubicacion_bien': forms.TextInput(attrs={'class': 'form-control'}),
+            'causa_siniestro': forms.Textarea(attrs={'class': 'form-control'}),
+            'nombre_bien': forms.TextInput(attrs={'class': 'form-control'}),
+            'poliza': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['poliza'].queryset = Poliza.objects.filter(estado='Activa')
+
+
+
+class SiniestroPorPolizaForm(forms.ModelForm):
+    class Meta:
+        model = Siniestro
+        exclude = [
+            'poliza',
+            'usuario_gestor',
+            'fecha_notificacion',
+            'estado_tramite',
+            'valor_reclamo',
+            'deducible_aplicado',
+            'depreciacion',
+            'valor_a_pagar',
+        ]
+
+        widgets = {
+            'fecha_siniestro': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo_siniestro': forms.TextInput(attrs={'class': 'form-control'}),
+            'ubicacion_bien': forms.TextInput(attrs={'class': 'form-control'}),
+            'causa_siniestro': forms.Textarea(attrs={'class': 'form-control'}),
+            'nombre_bien': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class SiniestroEditForm(forms.ModelForm):
+    class Meta:
+        model = Siniestro
+        exclude = [
+            'poliza',
+            'usuario_gestor',
+            'fecha_notificacion',
+        ]
+
+        widgets = {
+            'fecha_siniestro': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo_siniestro': forms.TextInput(attrs={'class': 'form-control'}),
+            'ubicacion_bien': forms.TextInput(attrs={'class': 'form-control'}),
+            'causa_siniestro': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'nombre_bien': forms.TextInput(attrs={'class': 'form-control'}),
+            'marca': forms.TextInput(attrs={'class': 'form-control'}),
+            'modelo': forms.TextInput(attrs={'class': 'form-control'}),
+            'serie': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_activo': forms.TextInput(attrs={'class': 'form-control'}),
+            'responsable_custodio': forms.TextInput(attrs={'class': 'form-control'}),
+            'estado_tramite': forms.Select(attrs={'class': 'form-select'}),
+            'cobertura_aplicada': forms.TextInput(attrs={'class': 'form-control'}),
+            'valor_reclamo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'deducible_aplicado': forms.NumberInput(attrs={'class': 'form-control'}),
+            'depreciacion': forms.NumberInput(attrs={'class': 'form-control'}),
+            'valor_a_pagar': forms.NumberInput(attrs={'class': 'form-control'}),
+        }

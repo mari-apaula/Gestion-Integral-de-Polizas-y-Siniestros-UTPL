@@ -63,7 +63,6 @@ class Siniestro(models.Model):
         on_delete=models.CASCADE, 
         related_name='siniestros'
     )
-
     # RELACIÓN 2: Asociación (1 Usuario -> * Siniestros)
     # El usuario que gestiona o registra el siniestro.
     usuario_gestor = models.ForeignKey(

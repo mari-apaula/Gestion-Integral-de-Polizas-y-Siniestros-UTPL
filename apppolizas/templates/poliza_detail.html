@@ -1,0 +1,117 @@
+{% extends 'master/masteranalista.html' %}
+{% load static %}
+
+{% block title %}Detalle de Póliza {{ poliza.numero_poliza }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<style>
+    .btn-primary { background-color: #0d6efd; border-color: #0d6efd; }
+    .text-muted-small { font-size: 0.85rem; color: #6c757d; font-weight: 600; text-transform: uppercase; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Detalle de Póliza</h3>
+            <p class="text-muted">Visualización de vigencia y siniestralidad asociada.</p>
+        </div>
+        <a href="{% url 'siniestros' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Registrar nuevo siniestro
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4 border-end">
+                            <span class="text-muted-small d-block">Número de Póliza</span>
+                            <span class="h5 fw-bold text-primary">{{ poliza.numero_poliza }}</span>
+                        </div>
+                        <div class="col-md-4 border-end ps-md-4">
+                            <span class="text-muted-small d-block">Estado Actual</span>
+                            <span class="badge {% if poliza.estado == 'Activo' %}bg-success{% else %}bg-secondary{% endif %} fs-6">
+                                {{ poliza.estado }}
+                            </span>
+                        </div>
+                        <div class="col-md-4 ps-md-4">
+                            <span class="text-muted-small d-block">Periodo de Vigencia</span>
+                            <span class="h6 mb-0">{{ poliza.vigencia_inicio|date:"d/m/Y" }} — {{ poliza.vigencia_fin|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0 text-dark">Siniestros Asociados</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tablaSiniestrosAsociados" class="table table-hover align-middle" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha del Suceso</th>
+                            <th>Tipo de Siniestro</th>
+                            <th>Estado del Trámite</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in siniestros %}
+                        <tr>
+                            <td class="fw-bold">{{ s.fecha_siniestro|date:"d/m/Y" }}</td>
+                            <td>{{ s.tipo_siniestro }}</td>
+                            <td>
+                                {% if s.estado_tramite == 'Pendiente' %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% elif s.estado_tramite == 'Aprobado' or s.estado_tramite == 'Liquidado' %}
+                                    <span class="badge bg-success">Completado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ s.estado_tramite }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'siniestro_detail' s.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i>Ver Detalle
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#tablaSiniestrosAsociados').DataTable({
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "responsive": true,
+            // 'l' activa el selector de longitud (Length changing input control)
+            // 'f' activa el filtrado/buscador (Filtering input)
+            "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rtip',
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+            "order": [[0, "desc"]] 
+        });
+    });
+</script>
+{% endblock %}

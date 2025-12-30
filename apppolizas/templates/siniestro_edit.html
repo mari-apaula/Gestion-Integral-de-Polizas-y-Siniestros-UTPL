@@ -1,0 +1,49 @@
+{% extends 'master/masteranalista.html' %}
+
+{% block extra_css %}
+<style>
+    .admin-scroll-content {
+        overflow-y: visible !important; 
+        height: auto !important;
+        min-height: 100vh;
+    }
+    
+    body, .main-content-admin {
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid pb-5"> <h3>Editar Siniestro</h3>
+    <p class="text-muted">
+        Póliza: {{ siniestro.poliza.numero_poliza }}
+    </p>
+
+    <hr>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+            {% for field in form %}
+            <div class="col-md-6 mb-3">
+                <label class="form-label"><strong>{{ field.label }}</strong></label>
+                {# Añadimos una clase de bootstrap si no la tiene el widget #}
+                {{ field }} 
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 mb-5">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{% url 'siniestro_detail' siniestro.id %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

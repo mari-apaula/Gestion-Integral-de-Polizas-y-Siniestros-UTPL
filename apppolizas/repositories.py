@@ -1,4 +1,4 @@
-from .models import Usuario, Poliza
+from .models import Usuario, Poliza, Siniestro
 
 
 class UsuarioRepository:
@@ -67,3 +67,41 @@ class PolizaRepository:
     @staticmethod
     def delete(poliza):
         poliza.delete()
+
+class SiniestroRepository:
+    """Repositorio para operaciones de acceso a datos de Siniestros"""
+
+    @staticmethod
+    def get_all():
+        # Usamos select_related para optimizar la carga de la póliza relacionada
+        return Siniestro.objects.select_related('poliza').all().order_by('-fecha_siniestro')
+
+    @staticmethod
+    def get_by_id(siniestro_id):
+        try:
+            return Siniestro.objects.get(id=siniestro_id)
+        except Siniestro.DoesNotExist:
+            return None
+
+    @staticmethod
+    def create(data):
+        return Siniestro.objects.create(**data)
+
+    @staticmethod
+    def update(siniestro_instance, data):
+        # 'data' es form.cleaned_data
+        for key, value in data.items():
+            setattr(siniestro_instance, key, value)
+        
+        # Esta línea es la que realmente guarda en la base de datos
+        siniestro_instance.save() 
+        return siniestro_instance
+
+    @staticmethod
+    def delete(siniestro_id):
+        return Siniestro.objects.filter(id=siniestro_id).delete()
+    
+    @staticmethod
+    def get_por_poliza(poliza_id):
+        """Consulta directa al ORM filtrando por ID de póliza"""
+        return Siniestro.objects.filter(poliza_id=poliza_id).order_by('-fecha_siniestro')
