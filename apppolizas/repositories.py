@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from .models import Usuario, Poliza, Siniestro, Factura
+=======
+from .models import Usuario, Poliza, Siniestro
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
 
 
 class UsuarioRepository:
@@ -105,6 +109,7 @@ class SiniestroRepository:
     def get_por_poliza(poliza_id):
         """Consulta directa al ORM filtrando por ID de póliza"""
         return Siniestro.objects.filter(poliza_id=poliza_id).order_by('-fecha_siniestro')
+<<<<<<< HEAD
     
     
 class FacturaRepository:
@@ -127,3 +132,5 @@ class FacturaRepository:
         # Al usar create(), Django llama internamente a save(), 
         # por lo que tus cálculos automáticos (IVA, descuentos) SE EJECUTARÁN.
         return Factura.objects.create(**data)
+=======
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b

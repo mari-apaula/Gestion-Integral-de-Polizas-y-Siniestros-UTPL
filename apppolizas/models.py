@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+<<<<<<< HEAD
 from datetime import date
+=======
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
 
 
 
@@ -104,6 +107,7 @@ class Siniestro(models.Model):
     deducible_aplicado = models.FloatField(default=0.0)
     depreciacion = models.FloatField(default=0.0)
     valor_a_pagar = models.FloatField(default=0.0) # Valor final a pagar
+<<<<<<< HEAD
 
  
 class Factura(models.Model):
@@ -202,3 +206,5 @@ class Factura(models.Model):
 
     def __str__(self):
         return f"Factura {self.numero_factura} - Póliza {self.poliza}"
+=======
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b

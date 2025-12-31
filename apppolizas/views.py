@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
+<<<<<<< HEAD
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template
@@ -20,6 +21,21 @@ from django.views.generic import DetailView
 from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm
 from .repositories import SiniestroRepository, UsuarioRepository
 from .services import AuthService, PolizaService, SiniestroService, FacturaService
+=======
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView, View
+
+from apppolizas.models import Poliza, Siniestro
+from django.views.generic import DetailView
+
+
+from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm
+from .repositories import SiniestroRepository, UsuarioRepository
+from .services import AuthService, PolizaService, SiniestroService
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
 
 
 # =====================================================
@@ -424,6 +440,7 @@ class SiniestroDeleteView(LoginRequiredMixin, View):
         siniestro.delete()
         messages.success(request, 'Siniestro eliminado correctamente')
         return redirect('siniestros')
+<<<<<<< HEAD
 
 #------------------------------------------------------
 # Factura
@@ -488,3 +505,5 @@ def generar_pdf_factura(request, factura_id):
        return HttpResponse(f'Error al generar PDF: <pre>{html}</pre>')
     
     return response
+=======
+>>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
