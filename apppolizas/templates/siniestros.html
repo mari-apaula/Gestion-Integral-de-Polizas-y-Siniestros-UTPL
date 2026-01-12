@@ -17,8 +17,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold">
-            
-        </i>Siniestros: 
+            Siniestros: 
             <span class="badge bg-light text-dark shadow-sm border">{{ poliza.numero_poliza }}</span>
         </h3>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearSiniestroModal">
@@ -42,14 +41,14 @@
                     <tbody>
                         {% for s in siniestros %}
                         <tr>
-                            <td class="fw-bold text-primary">{{ s.numero_reclamo }}</td>
+                            <td class="fw-bold text-primary">{{ s.numero_reclamo|default:"Pendiente" }}</td>
                             <td>{{ s.tipo_siniestro }}</td>
                             <td>{{ s.fecha_siniestro|date:"d/m/Y" }}</td>
                             <td>
-                                {% if s.estado_tramite == 'Pendiente' %}
-                                    <span class="badge bg-warning text-dark">Pendiente</span>
-                                {% elif s.estado_tramite == 'Aprobado' %}
-                                    <span class="badge bg-success">Aprobado</span>
+                                {% if s.estado_tramite == 'REPORTADO' %}
+                                    <span class="badge bg-warning text-dark">Reportado</span>
+                                {% elif s.estado_tramite == 'LIQUIDADO' %}
+                                    <span class="badge bg-success">Liquidado</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ s.estado_tramite }}</span>
                                 {% endif %}
@@ -81,11 +80,47 @@
                     <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Registrar Siniestro</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+                
                 <div class="modal-body">
-                    <div class="p-2">
-                        {{ form.as_p }}
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Póliza Afectada</label>
+                            {{ form.poliza }}
+                        </div>
+                
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha del Siniestro</label>
+                            {{ form.fecha_siniestro }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tipo de Evento</label>
+                            {{ form.tipo_siniestro }}
+                        </div>
+                
+                        <div class="col-md-12">
+                            <div class="p-3 bg-light rounded border border-primary-subtle">
+                                <label class="form-label fw-bold text-primary">
+                                    <i class="fas fa-user-shield me-1"></i>Responsable / Custodio
+                                </label>
+                                {{ form.custodio }} <div class="form-text small">Seleccione al funcionario responsable del bien afectado.</div>
+                            </div>
+                        </div>
+                
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Bien Afectado</label>
+                            {{ form.nombre_bien }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Ubicación</label>
+                            {{ form.ubicacion_bien }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción / Causa</label>
+                            {{ form.causa_siniestro }}
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary px-4">Guardar Registro</button>

@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <style>
+    /* Ajustes para permitir scroll si el formulario es largo */
     .admin-scroll-content {
         overflow-y: visible !important; 
         height: auto !important;
@@ -16,33 +17,101 @@
 {% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid pb-5"> <h3>Editar Siniestro</h3>
-    <p class="text-muted">
-        Póliza: {{ siniestro.poliza.numero_poliza }}
-    </p>
+<div class="container-fluid pb-5">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h3 class="fw-bold mb-0">Editar Siniestro</h3>
+            <p class="text-muted mb-0">
+                <i class="fas fa-hashtag me-1"></i>ID: {{ siniestro.id }} | 
+                Póliza: <span class="badge bg-secondary">{{ siniestro.poliza.numero_poliza }}</span>
+            </p>
+        </div>
+    </div>
 
-    <hr>
+    <hr class="mb-4">
 
     <form method="POST">
         {% csrf_token %}
-        <div class="row">
-            {% for field in form %}
-            <div class="col-md-6 mb-3">
-                <label class="form-label"><strong>{{ field.label }}</strong></label>
-                {# Añadimos una clase de bootstrap si no la tiene el widget #}
-                {{ field }} 
-                {% if field.errors %}
-                    <div class="text-danger small">{{ field.errors }}</div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="row g-3">
+                    
+                    <div class="col-12 border-bottom pb-2 mb-2">
+                        <h6 class="text-primary fw-bold"><i class="fas fa-info-circle me-2"></i>Información General</h6>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Fecha del Suceso</label>
+                        {{ form.fecha_siniestro }}
+                        {% if form.fecha_siniestro.errors %}
+                            <div class="text-danger small">{{ form.fecha_siniestro.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Tipo de Siniestro</label>
+                        {{ form.tipo_siniestro }}
+                        {% if form.tipo_siniestro.errors %}
+                            <div class="text-danger small">{{ form.tipo_siniestro.errors }}</div>
+                        {% endif %}
+                    </div>
 
-        <div class="mt-4 mb-5">
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-            <a href="{% url 'siniestro_detail' siniestro.id %}" class="btn btn-secondary">
-                Cancelar
-            </a>
+                    <div class="col-12 mt-4">
+                        <div class="p-3 bg-light rounded border border-primary-subtle">
+                            <label class="form-label fw-bold text-dark">
+                                <i class="fas fa-user-tag me-2"></i>Asignar Responsable / Custodio
+                            </label>
+                            {{ form.custodio }}
+                            
+                            {% if form.custodio.errors %}
+                                <div class="text-danger small mt-1">{{ form.custodio.errors }}</div>
+                            {% endif %}
+                            <div class="form-text mt-1"><i class="fas fa-info-circle me-1"></i>Seleccione al funcionario a cargo del bien.</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4 border-bottom pb-2 mb-2">
+                        <h6 class="text-primary fw-bold"><i class="fas fa-box-open me-2"></i>Detalle del Bien</h6>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nombre del Bien</label>
+                        {{ form.nombre_bien }}
+                        {% if form.nombre_bien.errors %}
+                            <div class="text-danger small">{{ form.nombre_bien.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Ubicación</label>
+                        {{ form.ubicacion_bien }}
+                        {% if form.ubicacion_bien.errors %}
+                            <div class="text-danger small">{{ form.ubicacion_bien.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Relato de los Hechos</label>
+                        {{ form.causa_siniestro }}
+                        {% if form.causa_siniestro.errors %}
+                            <div class="text-danger small">{{ form.causa_siniestro.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-none">
+                        {{ form.poliza }}
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white border-0 pt-3 pb-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'siniestro_detail' siniestro.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
         </div>
     </form>
 </div>

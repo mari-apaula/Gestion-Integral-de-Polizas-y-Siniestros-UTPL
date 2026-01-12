@@ -18,9 +18,9 @@ from apppolizas.models import Poliza, Siniestro, Factura, DocumentoSiniestro
 from django.views.generic import DetailView
 
 
-from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm, DocumentoSiniestroForm
+from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm, DocumentoSiniestroForm, CustodioForm
 from .repositories import SiniestroRepository, UsuarioRepository
-from .services import AuthService, PolizaService, SiniestroService, FacturaService, DocumentoService
+from .services import AuthService, PolizaService, SiniestroService, FacturaService, DocumentoService, CustodioService
 
 
 # =====================================================
@@ -305,7 +305,7 @@ class SiniestroListView(LoginRequiredMixin, View):
             try:
                 # CORRECCIÓN: El nombre del parámetro debe ser poliza_id
                 SiniestroService.crear_siniestro(
-                    poliza_id=request.POST.get('poliza'), # <--- Aquí estaba el error
+                    poliza=form.cleaned_data['poliza'], # <--- Aquí estaba el error
                     data=form.cleaned_data,
                     usuario=request.user
                 )
@@ -547,3 +547,80 @@ class SiniestroDeleteEvidenciaView(LoginRequiredMixin, View):
         
         messages.success(request, 'Documento eliminado correctamente del expediente.')
         return redirect('siniestro_detail', pk=siniestro_id)
+    
+
+class CustodioListView(LoginRequiredMixin, View):
+    template_name = 'custodios.html' # Crearemos este template en el paso 6
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        custodios = CustodioService.listar_custodios()
+        form = CustodioForm()
+        return render(request, self.template_name, {
+            'custodios': custodios, 
+            'form': form
+        })
+
+    def post(self, request):
+        form = CustodioForm(request.POST)
+        if form.is_valid():
+            try:
+                CustodioService.crear_custodio(form.cleaned_data)
+                messages.success(request, 'Custodio registrado exitosamente')
+                return redirect('custodios_list')
+            except Exception as e:
+                messages.error(request, f"Error al crear: {str(e)}")
+        
+        # Si falla, recargamos con errores
+        custodios = CustodioService.listar_custodios()
+        return render(request, self.template_name, {
+            'custodios': custodios, 
+            'form': form
+        })
+
+class CustodioUpdateView(LoginRequiredMixin, View):
+    template_name = 'custodio_edit.html' # Crearemos este template
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, pk):
+        try:
+            custodio = CustodioService.obtener_custodio(pk)
+            form = CustodioForm(instance=custodio)
+            return render(request, self.template_name, {'form': form, 'custodio': custodio})
+        except ValidationError:
+            return redirect('custodios_list')
+
+    def post(self, request, pk):
+        try:
+            custodio = CustodioService.obtener_custodio(pk)
+            form = CustodioForm(request.POST, instance=custodio)
+            if form.is_valid():
+                CustodioService.actualizar_custodio(pk, form.cleaned_data)
+                messages.success(request, 'Custodio actualizado')
+                return redirect('custodios_list')
+        except ValidationError as e:
+            messages.error(request, str(e))
+            
+        return render(request, self.template_name, {'form': form, 'custodio': custodio})
+
+class CustodioDeleteView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, pk):
+        try:
+            CustodioService.eliminar_custodio(pk)
+            messages.success(request, 'Custodio eliminado')
+        except ValidationError as e:
+            messages.error(request, str(e)) # Maneja el error si tiene siniestros
+        return redirect('custodios_list')

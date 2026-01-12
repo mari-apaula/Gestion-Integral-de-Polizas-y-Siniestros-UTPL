@@ -1,5 +1,5 @@
-from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro
-
+from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro, ResponsableCustodio
+from django.shortcuts import get_object_or_404
 
 class UsuarioRepository:
     """Repositorio para operaciones de acceso a datos de Usuario"""
@@ -69,42 +69,59 @@ class PolizaRepository:
         poliza.delete()
 
 class SiniestroRepository:
-    """Repositorio para operaciones de acceso a datos de Siniestros"""
-
     @staticmethod
     def get_all():
-        # Usamos select_related para optimizar la carga de la póliza relacionada
-        return Siniestro.objects.select_related('poliza').all().order_by('-fecha_siniestro')
+        return Siniestro.objects.all().order_by('-fecha_siniestro')
 
     @staticmethod
-    def get_by_id(siniestro_id):
-        try:
-            return Siniestro.objects.get(id=siniestro_id)
-        except Siniestro.DoesNotExist:
-            return None
-
-    @staticmethod
-    def create(data):
-        return Siniestro.objects.create(**data)
-
-    @staticmethod
-    def update(siniestro_instance, data):
-        # 'data' es form.cleaned_data
-        for key, value in data.items():
-            setattr(siniestro_instance, key, value)
-        
-        # Esta línea es la que realmente guarda en la base de datos
-        siniestro_instance.save() 
-        return siniestro_instance
-
-    @staticmethod
-    def delete(siniestro_id):
-        return Siniestro.objects.filter(id=siniestro_id).delete()
-    
-    @staticmethod
-    def get_por_poliza(poliza_id):
-        """Consulta directa al ORM filtrando por ID de póliza"""
+    def get_by_poliza(poliza_id):
         return Siniestro.objects.filter(poliza_id=poliza_id).order_by('-fecha_siniestro')
+
+    @staticmethod
+    def get_by_id(id):
+        return Siniestro.objects.filter(id=id).first()
+
+    @staticmethod
+    def create(poliza, data, usuario):
+        # Creamos la instancia manualmente para tener control total
+        siniestro = Siniestro(
+            poliza=poliza,
+            
+            # Asignamos el Custodio que viene del formulario
+            custodio=data.get('custodio'), 
+            
+            # Datos básicos
+            fecha_siniestro=data.get('fecha_siniestro'),
+            tipo_siniestro=data.get('tipo_siniestro'),
+            ubicacion_bien=data.get('ubicacion_bien'),
+            causa_siniestro=data.get('causa_siniestro'),
+            nombre_bien=data.get('nombre_bien'),
+            
+            # Datos de auditoría
+            usuario_gestor=usuario,
+            estado_tramite='REPORTADO' # Estado inicial por defecto
+        )
+        siniestro.save()
+        return siniestro
+
+    @staticmethod
+    def update(siniestro_id, data):
+        siniestro = get_object_or_404(Siniestro, id=siniestro_id)
+        
+        # Actualizamos campos permitidos
+        siniestro.fecha_siniestro = data.get('fecha_siniestro')
+        siniestro.tipo_siniestro = data.get('tipo_siniestro')
+        siniestro.custodio = data.get('custodio') # Actualizar custodio si cambió
+        siniestro.nombre_bien = data.get('nombre_bien')
+        siniestro.ubicacion_bien = data.get('ubicacion_bien')
+        siniestro.causa_siniestro = data.get('causa_siniestro')
+        
+        # Si vienen campos financieros/estado en el form de edición, los actualizamos
+        if 'estado_tramite' in data:
+            siniestro.estado_tramite = data.get('estado_tramite')
+        
+        siniestro.save()
+        return siniestro
     
     
 class FacturaRepository:
@@ -158,3 +175,33 @@ class DocumentoRepository:
     def delete(documento_id):
         # Al borrar el registro, django-storages también intenta borrar el archivo en MinIO
         return DocumentoSiniestro.objects.filter(id=documento_id).delete()
+    
+
+class CustodioRepository:
+    """Repositorio para gestión de Responsables/Custodios"""
+
+    @staticmethod
+    def get_all():
+        return ResponsableCustodio.objects.all().order_by('nombre_completo')
+
+    @staticmethod
+    def get_by_id(custodio_id):
+        try:
+            return ResponsableCustodio.objects.get(id=custodio_id)
+        except ResponsableCustodio.DoesNotExist:
+            return None
+
+    @staticmethod
+    def create(data):
+        return ResponsableCustodio.objects.create(**data)
+
+    @staticmethod
+    def update(custodio, data):
+        for field, value in data.items():
+            setattr(custodio, field, value)
+        custodio.save()
+        return custodio
+
+    @staticmethod
+    def delete(custodio_id):
+        return ResponsableCustodio.objects.filter(id=custodio_id).delete()
