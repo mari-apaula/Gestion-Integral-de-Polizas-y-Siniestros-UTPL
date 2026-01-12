@@ -1,28 +1,16 @@
-
 import jwt
 import datetime
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 
 from datetime import date
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-from .models import Usuario, Poliza, Siniestro, Factura
-from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository
-=======
-from .models import Usuario, Poliza, Siniestro
-from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
-=======
 from decimal import Decimal
 from .models import Usuario, Poliza, Siniestro, Factura, Finiquito, Notificacion
 from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository, DocumentoRepository, CustodioRepository, FiniquitoRepository, NotificacionRepository
 import os
 
 from django.db import transaction
->>>>>>> Stashed changes
 
 
 class AuthService:
@@ -132,7 +120,7 @@ class PolizaService:
 
     @staticmethod
     def contar_polizas_activas():
-        return Poliza.objects.filter(estado='Activa').count()
+        return Poliza.objects.filter(estado=True).count()
     
     @staticmethod
     def contar_polizas_vencidas():
@@ -141,29 +129,11 @@ class PolizaService:
 #---------------------
 # SINIESTRO
 class SiniestroService:
-
-    @staticmethod
-    def crear_siniestro(*, poliza_id, data, usuario):
-        # 1. Usar el repositorio de pólizas para obtener la instancia
-        poliza = PolizaRepository.get_by_id(poliza_id)
-        if not poliza:
-            raise ValidationError("La póliza no existe")
-            
-        # 2. Preparar el diccionario de datos para el repositorio de siniestros
-        data['poliza'] = poliza
-        data['usuario_gestor'] = usuario
-        
-        # 3. Guardar a través del repositorio
-        return SiniestroRepository.create(data)
-    
     @staticmethod
     def listar_todos():
-        # USAR EL REPOSITORIO
         return SiniestroRepository.get_all()
 
     @staticmethod
-<<<<<<< Updated upstream
-=======
     def listar_por_poliza(poliza_id):
         return SiniestroRepository.get_by_poliza(poliza_id)
 
@@ -195,24 +165,8 @@ class SiniestroService:
         return siniestro
 
     @staticmethod
->>>>>>> Stashed changes
     def actualizar_siniestro(siniestro_id, data):
-        siniestro = SiniestroRepository.get_by_id(siniestro_id)
-        if not siniestro:
-            raise ValidationError("El siniestro no existe")
-        
-        if siniestro.estado_tramite == 'LIQUIDADO':
-            raise ValidationError("No se puede editar un siniestro ya liquidado")
-            
-        # IMPORTANTE: No pasar campos que el repositorio no deba tocar
-        # aunque el formulario ya los excluye por el 'exclude' del Meta
-        return SiniestroRepository.update(siniestro, data)
-    
-    @staticmethod
-    def listar_por_poliza(poliza_id):
-        """Lógica de negocio para obtener siniestros de una póliza específica"""
-<<<<<<< HEAD
-        return SiniestroRepository.get_por_poliza(poliza_id)
+        return SiniestroRepository.update(siniestro_id, data)
     
 class FacturaService:
     """Servicio para gestión de Facturación y Cobranzas"""
@@ -248,11 +202,6 @@ class FacturaService:
         if not factura:
             raise ValidationError("La factura solicitada no existe")
         return factura
-<<<<<<< Updated upstream
-=======
-        return SiniestroRepository.get_por_poliza(poliza_id)
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
-=======
 
 # Servicio para gestión de Documentos de Siniestros
 
@@ -421,4 +370,3 @@ class NotificacionService:
         if noti and noti.usuario.id == usuario.id:
             return NotificacionRepository.marcar_como_leida(noti)
         return None
->>>>>>> Stashed changes

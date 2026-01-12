@@ -1,0 +1,97 @@
+{% extends 'master/masteranalista.html' %}
+{% load static %}
+
+{% block title %}Gestión de Custodios{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+<h3 class="mb-4">Directorio de Responsables y Custodios</h3>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-user-plus"></i> Nuevo Custodio</h5>
+        </div>
+        <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label fw-bold">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="text-danger small">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div class="d-grid">
+            <button type="submit" class="btn btn-success">Guardar Custodio</button>
+            </div>
+        </form>
+        </div>
+    </div>
+    </div>
+
+    <div class="col-md-8">
+    <div class="card shadow">
+        <div class="card-header bg-white">
+        <h5 class="mb-0">Custodios Registrados</h5>
+        </div>
+        <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                <th>Nombre</th>
+                <th>Identificación</th>
+                <th>Departamento</th>
+                <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in custodios %}
+                <tr>
+                <td>
+                    <div class="fw-bold">{{ c.nombre_completo }}</div>
+                    <small class="text-muted">{{ c.correo }}</small>
+                </td>
+                <td>{{ c.identificacion }}</td>
+                <td>{{ c.departamento|default:"-" }}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                    <a href="{% url 'custodio_update' c.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{% url 'custodio_delete' c.id %}" method="POST" onsubmit="return confirm('¿Eliminar a {{ c.nombre_completo }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    </div>
+                </td>
+                </tr>
+                {% empty %}
+                <tr>
+                <td colspan="4" class="text-center py-4">No hay custodios registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+{% endblock %}

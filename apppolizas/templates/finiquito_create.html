@@ -1,0 +1,56 @@
+{% extends 'master/masteranalista.html' %}
+
+{% block admin_content %} <div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Liquidar Siniestro #{{ siniestro.id }}</h3>
+            <p class="mb-0">{{ siniestro.tipo_siniestro }} - {{ siniestro.nombre_bien }}</p>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong>Información:</strong> Al procesar este formulario, el estado cambiará a <b>LIQUIDADO</b>.
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">ID Finiquito / Acta</label>
+                        {{ form.id_finiquito }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha de Liquidación</label>
+                        {{ form.fecha_finiquito }}
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Monto Bruto ($)</label>
+                        {{ form.valor_total_reclamo }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Deducible ($)</label>
+                        {{ form.valor_deducible }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Depreciación ($)</label>
+                        {{ form.valor_depreciacion }}
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Documento Acta Firmada (PDF)</label>
+                    {{ form.documento_firmado }}
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a href="{% url 'siniestro_detail' siniestro.id %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-success">Guardar Liquidación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

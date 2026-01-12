@@ -1,14 +1,5 @@
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-from .models import Usuario, Poliza, Siniestro, Factura
-=======
-from .models import Usuario, Poliza, Siniestro
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
-
-=======
 from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro, ResponsableCustodio, Finiquito, Notificacion
 from django.shortcuts import get_object_or_404
->>>>>>> Stashed changes
 
 class UsuarioRepository:
     """Repositorio para operaciones de acceso a datos de Usuario"""
@@ -78,43 +69,83 @@ class PolizaRepository:
         poliza.delete()
 
 class SiniestroRepository:
-    """Repositorio para operaciones de acceso a datos de Siniestros"""
-
     @staticmethod
     def get_all():
-        # Usamos select_related para optimizar la carga de la póliza relacionada
-        return Siniestro.objects.select_related('poliza').all().order_by('-fecha_siniestro')
+        return Siniestro.objects.all().order_by('-fecha_siniestro')
 
     @staticmethod
-    def get_by_id(siniestro_id):
-        try:
-            return Siniestro.objects.get(id=siniestro_id)
-        except Siniestro.DoesNotExist:
-            return None
-
-    @staticmethod
-    def create(data):
-        return Siniestro.objects.create(**data)
-
-    @staticmethod
-    def update(siniestro_instance, data):
-        # 'data' es form.cleaned_data
-        for key, value in data.items():
-            setattr(siniestro_instance, key, value)
-        
-        # Esta línea es la que realmente guarda en la base de datos
-        siniestro_instance.save() 
-        return siniestro_instance
-
-    @staticmethod
-    def delete(siniestro_id):
-        return Siniestro.objects.filter(id=siniestro_id).delete()
-    
-    @staticmethod
-    def get_por_poliza(poliza_id):
-        """Consulta directa al ORM filtrando por ID de póliza"""
+    def get_by_poliza(poliza_id):
         return Siniestro.objects.filter(poliza_id=poliza_id).order_by('-fecha_siniestro')
-<<<<<<< HEAD
+
+    @staticmethod
+    def get_by_id(id):
+        return Siniestro.objects.filter(id=id).first()
+
+    @staticmethod
+    def create(poliza, data, usuario):
+        # Creamos la instancia manualmente para tener control total
+        siniestro = Siniestro(
+            poliza=poliza,
+            
+            # Asignamos el Custodio que viene del formulario
+            custodio=data.get('custodio'), 
+            
+            # Datos básicos
+            fecha_siniestro=data.get('fecha_siniestro'),
+            tipo_siniestro=data.get('tipo_siniestro'),
+            ubicacion_bien=data.get('ubicacion_bien'),
+            causa_siniestro=data.get('causa_siniestro'),
+            nombre_bien=data.get('nombre_bien'),
+            
+            # Datos de auditoría
+            usuario_gestor=usuario,
+            estado_tramite='REPORTADO' # Estado inicial por defecto
+        )
+        siniestro.save()
+        return siniestro
+
+    @staticmethod
+    def update(siniestro_id, data):
+        siniestro = get_object_or_404(Siniestro, id=siniestro_id)
+        
+        # Lista para llevar registro de qué campos estamos cambiando
+        campos_a_actualizar = []
+
+        # Actualizamos solo si el campo viene en el diccionario 'data'
+        if 'fecha_siniestro' in data:
+            siniestro.fecha_siniestro = data.get('fecha_siniestro')
+            campos_a_actualizar.append('fecha_siniestro')
+            
+        if 'tipo_siniestro' in data:
+            siniestro.tipo_siniestro = data.get('tipo_siniestro')
+            campos_a_actualizar.append('tipo_siniestro')
+            
+        if 'custodio' in data:
+            siniestro.custodio = data.get('custodio')
+            campos_a_actualizar.append('custodio')
+            
+        if 'nombre_bien' in data:
+            siniestro.nombre_bien = data.get('nombre_bien')
+            campos_a_actualizar.append('nombre_bien')
+            
+        if 'ubicacion_bien' in data:
+            siniestro.ubicacion_bien = data.get('ubicacion_bien')
+            campos_a_actualizar.append('ubicacion_bien')
+            
+        if 'causa_siniestro' in data:
+            siniestro.causa_siniestro = data.get('causa_siniestro')
+            campos_a_actualizar.append('causa_siniestro')
+            
+        if 'estado_tramite' in data:
+            siniestro.estado_tramite = data.get('estado_tramite')
+            campos_a_actualizar.append('estado_tramite')
+
+        # EL CAMBIO CLAVE: 
+        # Si hay campos para actualizar, usamos update_fields
+        if campos_a_actualizar:
+            siniestro.save(update_fields=campos_a_actualizar)
+        
+        return siniestro
     
     
 class FacturaRepository:
@@ -137,10 +168,6 @@ class FacturaRepository:
         # Al usar create(), Django llama internamente a save(), 
         # por lo que tus cálculos automáticos (IVA, descuentos) SE EJECUTARÁN.
         return Factura.objects.create(**data)
-<<<<<<< Updated upstream
-=======
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
-=======
 
 
 
@@ -250,4 +277,3 @@ class NotificacionRepository:
         notificacion.estado = 'LEIDA'
         notificacion.save()
         return notificacion
->>>>>>> Stashed changes

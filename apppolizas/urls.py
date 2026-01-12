@@ -14,12 +14,9 @@ from .views import (
     SiniestroDetailView,
     SiniestroEditView,
     SiniestroDeleteView,
-<<<<<<< HEAD
     lista_facturas,
     crear_factura,
     generar_pdf_factura,
-<<<<<<< Updated upstream
-=======
     SubirEvidenciaView,
     SiniestroDeleteEvidenciaView, 
     CustodioListView, 
@@ -28,14 +25,8 @@ from .views import (
     FiniquitoCreateView,
     lista_notificaciones,
     marcar_notificacion_leida,
->>>>>>> Stashed changes
 )
 
-=======
-)
-
-
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
 urlpatterns = [
     path('', LoginView.as_view(), name='login'),
 
@@ -56,19 +47,12 @@ urlpatterns = [
     path('polizas/editar/<int:pk>/', PolizaUpdateView.as_view(), name='poliza_update'),
     path('polizas/eliminar/<int:pk>/', PolizaDeleteView.as_view(), name='poliza_delete'),
 
-<<<<<<< HEAD
     # Siniestros
     path('siniestros/', SiniestroListView.as_view(), name='siniestros'),
-=======
-    # Siniestros (UNA SOLA PANTALLA)
-    path('siniestros/', SiniestroListView.as_view(), name='siniestros'),
-    # Siniestros
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
     path('siniestros/<int:pk>/', SiniestroDetailView.as_view(), name='siniestro_detail'),
     path('siniestros/<int:pk>/editar/', SiniestroEditView.as_view(), name='siniestro_edit'),
     path('siniestros/<int:pk>/eliminar/', SiniestroDeleteView.as_view(), name='siniestro_delete'),
 
-<<<<<<< HEAD
     # Facturacion
     path('facturas/', lista_facturas, name='lista_facturas'),
     path('facturas/nueva/', crear_factura, name='crear_factura'),
@@ -76,15 +60,6 @@ urlpatterns = [
 
     # Logout
     path('logout/', logout_view, name='logout'),
-<<<<<<< Updated upstream
-]
-=======
-
-    # Logout
-    path('logout/', logout_view, name='logout'),
-]
->>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
-=======
 
     # Subida de evidencia para siniestros
     path('siniestros/<int:siniestro_id>/subir-evidencia/', SubirEvidenciaView.as_view(), name='subir_evidencia'),
@@ -104,4 +79,3 @@ urlpatterns = [
     path('notificaciones/', lista_notificaciones, name='lista_notificaciones'),
     path('notificaciones/leer/<int:notificacion_id>/', marcar_notificacion_leida, name='marcar_notificacion_leida'),
 ]
->>>>>>> Stashed changes

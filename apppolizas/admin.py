@@ -1,51 +1,53 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Poliza
+from .models import (
+    Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro,
+    ResponsableCustodio, Aseguradora, Broker, Finiquito, Notificacion, DocumentoPoliza
+)
 
-# 1. Configuración para el modelo USUARIO
-class UsuarioAdmin(UserAdmin):
-    # Campos que se muestran en la lista (tabla) de usuarios
-    list_display = ('username', 'email', 'nombres_completos', 'rol', 'cedula', 'estado', 'is_staff')
-    
-    # Filtros laterales
-    list_filter = ('rol', 'estado', 'is_staff', 'is_superuser')
-    
-    # Campos de búsqueda
-    search_fields = ('username', 'email', 'cedula', 'first_name', 'last_name')
+@admin.register(Usuario)
+class UsuarioAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'rol', 'cedula', 'estado')
+    list_filter = ('rol', 'estado')
 
-    # Organización del formulario de EDICIÓN
-    # UserAdmin.fieldsets trae la config por defecto (user, pass, permisos). 
-    # Agregamos nuestros campos personalizados al final.
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información Extra', {'fields': ('rol', 'cedula', 'telefono', 'estado')}),
-    )
+@admin.register(Aseguradora)
+class AseguradoraAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'contacto', 'telefono')
 
-    # Organización del formulario de CREACIÓN
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información Extra', {'fields': ('email', 'first_name', 'last_name', 'rol', 'cedula', 'telefono', 'estado')}),
-    )
+@admin.register(Broker)
+class BrokerAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'correo')
 
-    # Método auxiliar para mostrar nombres completos en la tabla
-    def nombres_completos(self, obj):
-        return f"{obj.first_name} {obj.last_name}"
+@admin.register(ResponsableCustodio)
+class CustodioAdmin(admin.ModelAdmin):
+    list_display = ('nombre_completo', 'identificacion', 'departamento')
+    search_fields = ('nombre_completo', 'identificacion')
 
-# 2. Configuración para el modelo PÓLIZA
+@admin.register(Poliza)
 class PolizaAdmin(admin.ModelAdmin):
-    # Columnas a mostrar
-    list_display = ('numero_poliza', 'tipo_poliza', 'usuario_gestor', 'estado', 'vigencia_fin', 'monto_asegurado')
-    
-    # Filtros laterales
-    list_filter = ('estado', 'tipo_poliza', 'renovable', 'fecha_registro')
-    
-    # Barra de búsqueda (puedes buscar por número o por el usuario que gestiona)
-    search_fields = ('numero_poliza', 'usuario_gestor__username', 'usuario_gestor__first_name')
-    
-    # Paginación (útil si tienes muchas pólizas)
-    list_per_page = 20
+    # CORREGIDO: Eliminamos 'tipo_poliza'
+    list_display = ('numero_poliza', 'aseguradora', 'ramo', 'vigencia_fin', 'estado')
+    list_filter = ('estado', 'aseguradora', 'ramo')
+    search_fields = ('numero_poliza', 'aseguradora__nombre')
 
-    # Opcional: Para que ciertos campos sean solo lectura (ej: fechas automáticas)
-    readonly_fields = ('fecha_registro',)
+@admin.register(Siniestro)
+class SiniestroAdmin(admin.ModelAdmin):
+    list_display = ('numero_reclamo', 'poliza', 'custodio', 'fecha_siniestro', 'estado_tramite')
+    list_filter = ('estado_tramite', 'tipo_siniestro')
+    search_fields = ('poliza__numero_poliza', 'custodio__nombre_completo')
 
-# 3. Registrar los modelos
-admin.site.register(Usuario, UsuarioAdmin)
-admin.site.register(Poliza, PolizaAdmin)
+@admin.register(Factura)
+class FacturaAdmin(admin.ModelAdmin):
+    list_display = ('numero_factura', 'poliza', 'fecha_emision', 'total_facturado', 'pagado')
+    list_filter = ('pagado',)
+
+@admin.register(Finiquito)
+class FiniquitoAdmin(admin.ModelAdmin):
+    list_display = ('id_finiquito', 'siniestro', 'valor_final_pago', 'fecha_finiquito')
+
+@admin.register(Notificacion)
+class NotificacionAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'tipo_alerta', 'estado', 'fecha_emision')
+    list_filter = ('estado', 'tipo_alerta')
+
+admin.site.register(DocumentoSiniestro)
+admin.site.register(DocumentoPoliza)
