@@ -20,7 +20,7 @@ from django.views.generic import DetailView
 
 from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm, DocumentoSiniestroForm, CustodioForm, FiniquitoForm
 from .repositories import SiniestroRepository, UsuarioRepository, FiniquitoRepository
-from .services import AuthService, PolizaService, SiniestroService, FacturaService, DocumentoService, CustodioService, FiniquitoService
+from .services import AuthService, PolizaService, SiniestroService, FacturaService, DocumentoService, CustodioService, FiniquitoService, NotificacionService
 
 
 # =====================================================
@@ -201,7 +201,15 @@ class PolizaListView(LoginRequiredMixin, View):
         form = PolizaForm(request.POST)
         if form.is_valid():
             try:
-                PolizaService.crear_poliza(form.cleaned_data)
+                # 1. Obtenemos los datos del formulario
+                datos_poliza = form.cleaned_data
+                
+                # 2. ¡EL CAMBIO CLAVE! Inyectamos el usuario logueado
+                datos_poliza['usuario_gestor'] = request.user 
+                
+                # 3. Llamamos al servicio con los datos completos
+                PolizaService.crear_poliza(datos_poliza)
+                
                 messages.success(request, 'Póliza creada exitosamente')
                 return redirect('polizas_list')
             except Exception as e:
@@ -685,3 +693,25 @@ class FiniquitoCreateView(LoginRequiredMixin, View):
         siniestro = SiniestroRepository.get_by_id(siniestro_id)
         print(f"--- DEBUG: Renderizando nuevamente formulario por error en POST para siniestro {siniestro_id} ---")
         return render(request, self.template_name, {'form': form, 'siniestro': siniestro})
+    
+# ---------------------------------------------
+# NOTIFICACIONES
+# ---------------------------------------------
+
+def lista_notificaciones(request):
+    """Muestra todas las alertas del usuario logueado"""
+    # Asumiendo que usas el login_universal y 'request.user' tiene el usuario
+    # Si tu usuario está en request.session['usuario_id'], ajusta esto.
+    # Usaremos request.user suponiendo autenticación estándar de Django:
+    
+    notificaciones = NotificacionService.listar_mis_notificaciones(request.user)
+    
+    return render(request, 'lista_notificaciones.html', {
+        'notificaciones': notificaciones
+    })
+
+def marcar_notificacion_leida(request, notificacion_id):
+    """Acción para marcar leída y redirigir"""
+    NotificacionService.leer_notificacion(notificacion_id, request.user)
+    messages.success(request, "Notificación marcada como leída.")
+    return redirect('lista_notificaciones')

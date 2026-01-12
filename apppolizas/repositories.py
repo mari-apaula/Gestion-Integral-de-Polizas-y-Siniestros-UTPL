@@ -1,4 +1,4 @@
-from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro, ResponsableCustodio, Finiquito
+from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro, ResponsableCustodio, Finiquito, Notificacion
 from django.shortcuts import get_object_or_404
 
 class UsuarioRepository:
@@ -248,3 +248,32 @@ class FiniquitoRepository:
             return Finiquito.objects.get(siniestro_id=siniestro_id)
         except Finiquito.DoesNotExist:
             return None
+
+class NotificacionRepository:
+    """Repositorio para gestión de Notificaciones"""
+
+    @staticmethod
+    def crear(data):
+        return Notificacion.objects.create(**data)
+
+    @staticmethod
+    def get_by_usuario(usuario):
+        # Devuelve primero las más nuevas
+        return Notificacion.objects.filter(usuario=usuario).order_by('-fecha_emision')
+
+    @staticmethod
+    def get_pendientes_count(usuario):
+        return Notificacion.objects.filter(usuario=usuario, estado='PENDIENTE').count()
+
+    @staticmethod
+    def get_by_id(notificacion_id):
+        try:
+            return Notificacion.objects.get(id=notificacion_id)
+        except Notificacion.DoesNotExist:
+            return None
+
+    @staticmethod
+    def marcar_como_leida(notificacion):
+        notificacion.estado = 'LEIDA'
+        notificacion.save()
+        return notificacion

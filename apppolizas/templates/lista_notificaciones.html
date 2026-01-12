@@ -1,0 +1,92 @@
+{% extends 'master/masteranalista.html' %}
+{% load static %}
+
+{% block title %}Mis Notificaciones{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary">
+            <i class="fas fa-bell me-2"></i>Centro de Notificaciones
+        </h3>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tablaNotificaciones" class="table table-hover align-middle" style="width:100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Estado</th>
+                            <th>Tipo de Alerta</th>
+                            <th>Mensaje</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for noti in notificaciones %}
+                        <tr class="{% if noti.estado == 'PENDIENTE' %}table-warning fw-bold{% endif %}">
+                            <td>
+                                {% if noti.estado == 'PENDIENTE' %}
+                                    <span class="badge bg-danger">NUEVA</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Leída</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if noti.tipo_alerta == 'VENCIMIENTO_POLIZA' %}
+                                    <i class="fas fa-calendar-times text-danger me-1"></i> Vencimiento
+                                {% elif noti.tipo_alerta == 'PAGO_PENDIENTE' %}
+                                    <i class="fas fa-money-bill-wave text-warning me-1"></i> Cobranza
+                                {% else %}
+                                    <i class="fas fa-info-circle text-info me-1"></i> Sistema
+                                {% endif %}
+                            </td>
+                            <td>{{ noti.mensaje }}</td>
+                            <td data-order="{{ noti.fecha_emision|date:'Y-m-d H:i' }}">
+                                {{ noti.fecha_emision|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="text-center">
+                                {% if noti.estado == 'PENDIENTE' %}
+                                <a href="{% url 'marcar_notificacion_leida' noti.id %}" class="btn btn-sm btn-outline-primary" title="Marcar como leída">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% else %}
+                                <i class="fas fa-check-double text-muted" title="Leído"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#tablaNotificaciones').DataTable({
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "responsive": true,
+            "pageLength": 10,
+            // Ordenar por la columna 3 (Fecha) de forma descendente (lo más nuevo arriba)
+            "order": [[ 3, "desc" ]] 
+        });
+    });
+</script>
+{% endblock %}

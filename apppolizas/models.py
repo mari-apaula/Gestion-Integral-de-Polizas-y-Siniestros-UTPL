@@ -238,11 +238,13 @@ class Factura(models.Model):
     def __str__(self):
         return f"Factura {self.numero_factura}"
 
-# ========================================================
+# --------------------------------------------------------
 # 7. SISTEMA DE ALERTAS Y NOTIFICACIONES
-# ========================================================
-
+# --------------------------------------------------------
 class Notificacion(models.Model):
+    """
+    Sistema de alertas basado en el TDR.
+    """
     TIPO_ALERTA_CHOICES = [
         ('VENCIMIENTO_POLIZA', 'Vencimiento de Póliza'),
         ('PAGO_PENDIENTE', 'Pago por Realizar'),
@@ -257,16 +259,21 @@ class Notificacion(models.Model):
         ('ENVIADA_CORREO', 'Enviada por Correo'),
     ]
 
+    # Relación con tu modelo de Usuario
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='notificaciones')
-    mensaje = models.TextField() 
+    mensaje = models.TextField()
+    
     tipo_alerta = models.CharField(max_length=50, choices=TIPO_ALERTA_CHOICES)
     fecha_emision = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default='PENDIENTE')
+    
     enviado_por_correo = models.BooleanField(default=False)
+    
+    # Para guardar el ID de la Póliza (ej: "15") o Siniestro relacionado
     id_referencia = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
-        return f"Alerta {self.id} - {self.tipo_alerta}"
+        return f"Alerta {self.id} - {self.tipo_alerta} para {self.usuario.username}"
 
 # ========================================================
 # 8. DOCUMENTOS DE SINIESTROS

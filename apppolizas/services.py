@@ -6,8 +6,8 @@ from django.contrib.auth import authenticate
 
 from datetime import date
 from decimal import Decimal
-from .models import Usuario, Poliza, Siniestro, Factura, Finiquito
-from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository, DocumentoRepository, CustodioRepository, FiniquitoRepository
+from .models import Usuario, Poliza, Siniestro, Factura, Finiquito, Notificacion
+from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository, DocumentoRepository, CustodioRepository, FiniquitoRepository, NotificacionRepository
 import os
 
 from django.db import transaction
@@ -73,10 +73,29 @@ class PolizaService:
 
     @staticmethod
     def crear_poliza(data):
+        # 1. Validaciones
         if data.get('prima_total') < data.get('prima_base'):
             raise ValidationError("La prima total no puede ser menor a la prima base")
 
-        return PolizaRepository.create(data)
+        # 2. Crear la póliza
+        poliza = PolizaRepository.create(data)
+
+        # 3. --- NUEVO: GENERAR NOTIFICACIÓN AUTOMÁTICA ---
+        # Verificamos si hay un usuario gestor asociado para enviarle la alerta
+        usuario = data.get('usuario_gestor')
+        
+        if usuario:
+            # Usamos NotificacionRepository directamente para evitar errores de orden de lectura
+            NotificacionRepository.crear({
+                'usuario': usuario,
+                'tipo_alerta': 'VENCIMIENTO_POLIZA', # Usamos este tipo o 'OTRO' para indicar nueva creación
+                'mensaje': f"Se ha registrado exitosamente la nueva póliza {poliza.numero_poliza}.",
+                'estado': 'PENDIENTE',
+                'id_referencia': str(poliza.id)
+            })
+        # -------------------------------------------------
+
+        return poliza
 
     @staticmethod
     def obtener_poliza(poliza_id):
@@ -119,27 +138,36 @@ class SiniestroService:
         return SiniestroRepository.get_by_poliza(poliza_id)
 
     @staticmethod
-    # AQUÍ ESTABA EL ERROR: Faltaba añadir 'poliza' como argumento aceptado
     def crear_siniestro(poliza, data, usuario):
         """
-        Crea un siniestro validando reglas de negocio.
-        :param poliza: Objeto Poliza (instancia)
-        :param data: Diccionario cleaned_data del formulario (incluye custodio, fecha, etc.)
-        :param usuario: Usuario que registra
+        Crea un siniestro y notifica al usuario (solo texto).
         """
         
-        # 1. Validaciones de Negocio (Ejemplo: No registrar siniestros en pólizas vencidas)
+        # 1. Validaciones de Negocio
         if not poliza.estado:
              raise ValidationError("No se puede registrar un siniestro en una póliza inactiva.")
 
-        # 2. Llamar al repositorio para guardar
-        return SiniestroRepository.create(poliza, data, usuario)
+        # 2. Guardar el siniestro
+        siniestro = SiniestroRepository.create(poliza, data, usuario)
+
+        # 3. --- NUEVO: NOTIFICACIÓN DE SINIESTRO ---
+        if usuario:
+            NotificacionRepository.crear({
+                'usuario': usuario,
+                'tipo_alerta': 'OTRO', 
+                # AQUÍ QUITAMOS EL SIGNO ⚠️, AHORA ES SOLO TEXTO:
+                'mensaje': f"Nuevo Siniestro registrado en la póliza {poliza.numero_poliza}. Bien afectado: {siniestro.nombre_bien}",
+                'estado': 'PENDIENTE',
+                'id_referencia': str(siniestro.id)
+            })
+        # -------------------------------------------
+
+        return siniestro
 
     @staticmethod
     def actualizar_siniestro(siniestro_id, data):
         return SiniestroRepository.update(siniestro_id, data)
     
-
 class FacturaService:
     """Servicio para gestión de Facturación y Cobranzas"""
 
@@ -149,9 +177,24 @@ class FacturaService:
 
     @staticmethod
     def crear_factura(data):
-        # Aquí podrías agregar validaciones extra si quisieras antes de crear
-        # Por ahora, delegamos al repositorio
-        return FacturaRepository.create(data)
+        # 1. Primero creamos la factura normalmente
+        factura = FacturaRepository.create(data)
+
+        # 2. --- NUEVO: ALERTA DE COBRANZA AUTOMÁTICA ---
+        # Buscamos al dueño de la póliza para avisarle
+        usuario_destino = factura.poliza.usuario_gestor
+
+        if usuario_destino:
+            NotificacionRepository.crear({
+                'usuario': usuario_destino,
+                'tipo_alerta': 'PAGO_PENDIENTE',  # <--- Esto pone el ícono de Cobranza/Dinero
+                'mensaje': f"Nueva Factura {factura.numero_factura} generada. Valor a pagar: ${factura.valor_a_pagar}",
+                'estado': 'PENDIENTE',
+                'id_referencia': str(factura.id)
+            })
+        # ------------------------------------------------
+
+        return factura
 
     @staticmethod
     def obtener_factura(factura_id):
@@ -297,3 +340,33 @@ class FiniquitoService:
 
             return finiquito
         # --- FIN DE TRANSACCIÓN ---
+
+class NotificacionService:
+    """Servicio de Negocio para Notificaciones"""
+
+    @staticmethod
+    def crear_notificacion(usuario, tipo, mensaje, id_ref=None):
+        data = {
+            'usuario': usuario,
+            'tipo_alerta': tipo,
+            'mensaje': mensaje,
+            'id_referencia': id_ref,
+            'estado': 'PENDIENTE'
+        }
+        return NotificacionRepository.crear(data)
+
+    @staticmethod
+    def listar_mis_notificaciones(usuario):
+        return NotificacionRepository.get_by_usuario(usuario)
+
+    @staticmethod
+    def contar_no_leidas(usuario):
+        return NotificacionRepository.get_pendientes_count(usuario)
+
+    @staticmethod
+    def leer_notificacion(notificacion_id, usuario):
+        # Verificamos que la notificación exista y pertenezca al usuario
+        noti = NotificacionRepository.get_by_id(notificacion_id)
+        if noti and noti.usuario.id == usuario.id:
+            return NotificacionRepository.marcar_como_leida(noti)
+        return None

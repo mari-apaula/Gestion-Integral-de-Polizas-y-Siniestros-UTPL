@@ -69,6 +69,14 @@
               Custodios
           </a>
         </li>
+
+        <li class="{% if 'notificaciones' in request.resolver_match.url_name %}activo{% endif %}">
+          <a href="{% url 'lista_notificaciones' %}">
+            <i class="fas fa-bell" style="font-size: 20px; margin-right: 10px; width: 24px; text-align: center;"></i>
+              Notificaciones
+          </a>
+        </li>
+
       </ul>
     </nav>
 

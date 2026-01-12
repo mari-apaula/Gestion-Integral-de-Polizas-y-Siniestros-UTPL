@@ -23,6 +23,8 @@ from .views import (
     CustodioUpdateView, 
     CustodioDeleteView,
     FiniquitoCreateView,
+    lista_notificaciones,
+    marcar_notificacion_leida,
 )
 
 urlpatterns = [
@@ -62,8 +64,6 @@ urlpatterns = [
     # Subida de evidencia para siniestros
     path('siniestros/<int:siniestro_id>/subir-evidencia/', SubirEvidenciaView.as_view(), name='subir_evidencia'),
     path('documentos/<int:pk>/eliminar/', SiniestroDeleteEvidenciaView.as_view(), name='eliminar_evidencia'),
-    # path('siniestros/<int:pk>/editar/', SiniestroEditView.as_view(), name='siniestro_edit'), para el botón amarillo de editar 
-
 
     # GESTIÓN DE CUSTODIOS
     path('custodios/', CustodioListView.as_view(), name='custodios_list'),
@@ -72,4 +72,10 @@ urlpatterns = [
 
     # GESTIÓN DE FINIQUITOS
     path('siniestros/<int:siniestro_id>/finiquitar/', FiniquitoCreateView.as_view(), name='crear_finiquito'),
+
+    
+    # GESTIÓN DE NOTIFICACIONES
+    
+    path('notificaciones/', lista_notificaciones, name='lista_notificaciones'),
+    path('notificaciones/leer/<int:notificacion_id>/', marcar_notificacion_leida, name='marcar_notificacion_leida'),
 ]
