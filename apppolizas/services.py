@@ -1,15 +1,13 @@
-
 import jwt
 import datetime
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 
 from datetime import date
 from .models import Usuario, Poliza, Siniestro, Factura
-from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository, DocumentoRepository
-
+from .repositories import UsuarioRepository, PolizaRepository, SiniestroRepository, FacturaRepository, DocumentoRepository, CustodioRepository
+from django.core.exceptions import ValidationError
 import os
 
 
@@ -101,7 +99,7 @@ class PolizaService:
 
     @staticmethod
     def contar_polizas_activas():
-        return Poliza.objects.filter(estado='Activa').count()
+        return Poliza.objects.filter(estado=True).count()
     
     @staticmethod
     def contar_polizas_vencidas():
@@ -110,43 +108,34 @@ class PolizaService:
 #---------------------
 # SINIESTRO
 class SiniestroService:
-
-    @staticmethod
-    def crear_siniestro(*, poliza_id, data, usuario):
-        # 1. Usar el repositorio de pólizas para obtener la instancia
-        poliza = PolizaRepository.get_by_id(poliza_id)
-        if not poliza:
-            raise ValidationError("La póliza no existe")
-            
-        # 2. Preparar el diccionario de datos para el repositorio de siniestros
-        data['poliza'] = poliza
-        data['usuario_gestor'] = usuario
-        
-        # 3. Guardar a través del repositorio
-        return SiniestroRepository.create(data)
-    
     @staticmethod
     def listar_todos():
-        # USAR EL REPOSITORIO
         return SiniestroRepository.get_all()
 
     @staticmethod
-    def actualizar_siniestro(siniestro_id, data):
-        siniestro = SiniestroRepository.get_by_id(siniestro_id)
-        if not siniestro:
-            raise ValidationError("El siniestro no existe")
-        
-        if siniestro.estado_tramite == 'LIQUIDADO':
-            raise ValidationError("No se puede editar un siniestro ya liquidado")
-            
-        # IMPORTANTE: No pasar campos que el repositorio no deba tocar
-        # aunque el formulario ya los excluye por el 'exclude' del Meta
-        return SiniestroRepository.update(siniestro, data)
-    
-    @staticmethod
     def listar_por_poliza(poliza_id):
-        """Lógica de negocio para obtener siniestros de una póliza específica"""
-        return SiniestroRepository.get_por_poliza(poliza_id)
+        return SiniestroRepository.get_by_poliza(poliza_id)
+
+    @staticmethod
+    # AQUÍ ESTABA EL ERROR: Faltaba añadir 'poliza' como argumento aceptado
+    def crear_siniestro(poliza, data, usuario):
+        """
+        Crea un siniestro validando reglas de negocio.
+        :param poliza: Objeto Poliza (instancia)
+        :param data: Diccionario cleaned_data del formulario (incluye custodio, fecha, etc.)
+        :param usuario: Usuario que registra
+        """
+        
+        # 1. Validaciones de Negocio (Ejemplo: No registrar siniestros en pólizas vencidas)
+        if not poliza.estado:
+             raise ValidationError("No se puede registrar un siniestro en una póliza inactiva.")
+
+        # 2. Llamar al repositorio para guardar
+        return SiniestroRepository.create(poliza, data, usuario)
+
+    @staticmethod
+    def actualizar_siniestro(siniestro_id, data):
+        return SiniestroRepository.update(siniestro_id, data)
     
 
 class FacturaService:
@@ -169,11 +158,7 @@ class FacturaService:
             raise ValidationError("La factura solicitada no existe")
         return factura
 
-
-
-
-
-  # Servicio para gestión de Documentos de Siniestros
+# Servicio para gestión de Documentos de Siniestros
 
 class DocumentoService:
         
@@ -218,3 +203,40 @@ class DocumentoService:
     @staticmethod
     def listar_evidencias(siniestro_id):
         return DocumentoRepository.get_by_siniestro(siniestro_id)
+    
+
+class CustodioService:
+    """Servicio para gestión de Custodios"""
+
+    @staticmethod
+    def listar_custodios():
+        return CustodioRepository.get_all()
+
+    @staticmethod
+    def crear_custodio(data):
+        # Validar duplicados de cédula si es necesario (aunque el modelo ya tiene unique=True)
+        return CustodioRepository.create(data)
+
+    @staticmethod
+    def obtener_custodio(custodio_id):
+        custodio = CustodioRepository.get_by_id(custodio_id)
+        if not custodio:
+            raise ValidationError("El custodio no existe")
+        return custodio
+
+    @staticmethod
+    def actualizar_custodio(custodio_id, data):
+        custodio = CustodioRepository.get_by_id(custodio_id)
+        if not custodio:
+            raise ValidationError("El custodio no existe")
+        return CustodioRepository.update(custodio, data)
+
+    @staticmethod
+    def eliminar_custodio(custodio_id):
+        # Aquí podrías validar si tiene siniestros asociados antes de borrar
+        # (Django lanzará error de integridad ProtectedError por on_delete=models.PROTECT, 
+        # pero es bueno manejarlo)
+        try:
+            CustodioRepository.delete(custodio_id)
+        except Exception as e:
+            raise ValidationError("No se puede eliminar: El custodio tiene siniestros asociados.")

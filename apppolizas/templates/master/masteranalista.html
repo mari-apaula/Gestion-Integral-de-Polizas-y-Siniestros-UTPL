@@ -57,12 +57,18 @@
         </li>
 
         <li class="{% if 'factura' in request.resolver_match.url_name %}activo{% endif %}">
-            <a href="{% url 'lista_facturas' %}">
-              <img src="{% static 'images/icono4.png' %}" class="icono-svg">
+          <a href="{% url 'lista_facturas' %}">
+            <img src="{% static 'images/icono4.png' %}" class="icono-svg">
               Facturación
-            </a>
+          </a>
         </li>
 
+        <li class="{% if 'custodio' in request.resolver_match.url_name %}activo{% endif %}">
+          <a href="{% url 'custodios_list' %}">
+            <i class="fas fa-users icono-svg" style="font-size: 1.2rem; margin-right: 10px;"></i>
+              Custodios
+          </a>
+        </li>
       </ul>
     </nav>
 

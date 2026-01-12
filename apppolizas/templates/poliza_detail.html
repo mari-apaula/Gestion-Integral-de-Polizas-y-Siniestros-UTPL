@@ -28,21 +28,58 @@
             <div class="card shadow border-0 rounded-3">
                 <div class="card-body p-4">
                     <div class="row">
-                        <div class="col-md-4 border-end">
+                        <div class="col-md-3 border-end">
                             <span class="text-muted-small d-block">Número de Póliza</span>
                             <span class="h5 fw-bold text-primary">{{ poliza.numero_poliza }}</span>
                         </div>
-                        <div class="col-md-4 border-end ps-md-4">
+                        <div class="col-md-3 border-end ps-md-4">
+                            <span class="text-muted-small d-block">Ramo / Objeto</span>
+                            <span class="fw-bold">{{ poliza.ramo }}</span><br>
+                            <small>{{ poliza.objeto_asegurado }}</small>
+                        </div>
+                        <div class="col-md-3 border-end ps-md-4">
                             <span class="text-muted-small d-block">Estado Actual</span>
-                            <span class="badge {% if poliza.estado == 'Activo' %}bg-success{% else %}bg-secondary{% endif %} fs-6">
-                                {{ poliza.estado }}
+                            <span class="badge {% if poliza.estado %}bg-success{% else %}bg-secondary{% endif %} fs-6">
+                                {% if poliza.estado %}Activa{% else %}Inactiva{% endif %}
                             </span>
                         </div>
-                        <div class="col-md-4 ps-md-4">
+                        <div class="col-md-3 ps-md-4">
                             <span class="text-muted-small d-block">Periodo de Vigencia</span>
                             <span class="h6 mb-0">{{ poliza.vigencia_inicio|date:"d/m/Y" }} — {{ poliza.vigencia_fin|date:"d/m/Y" }}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-light fw-bold">🏢 Aseguradora</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ poliza.aseguradora.nombre }}</h5>
+                    <p class="card-text mb-1"><i class="fas fa-id-card me-2 text-muted"></i>RUC: {{ poliza.aseguradora.ruc }}</p>
+                    <p class="card-text mb-1"><i class="fas fa-user me-2 text-muted"></i>Contacto: {{ poliza.aseguradora.contacto }}</p>
+                    <p class="card-text mb-1"><i class="fas fa-phone me-2 text-muted"></i>{{ poliza.aseguradora.telefono }}</p>
+                    <p class="card-text"><i class="fas fa-envelope me-2 text-muted"></i>{{ poliza.aseguradora.email_contacto }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-light fw-bold">🤝 Corredor (Broker)</div>
+                <div class="card-body">
+                    {% if poliza.broker %}
+                        <h5 class="card-title">{{ poliza.broker.nombre }}</h5>
+                        <p class="card-text mb-1"><i class="fas fa-hashtag me-2 text-muted"></i>ID: {{ poliza.broker.id_broker }}</p>
+                        <p class="card-text"><i class="fas fa-envelope me-2 text-muted"></i>{{ poliza.broker.correo }}</p>
+                        <div class="alert alert-info py-2 mt-2 font-monospace small">
+                            <i class="fas fa-info-circle me-1"></i> Recibe notificaciones automáticas.
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No se ha asignado un broker a esta póliza.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -69,10 +106,10 @@
                             <td class="fw-bold">{{ s.fecha_siniestro|date:"d/m/Y" }}</td>
                             <td>{{ s.tipo_siniestro }}</td>
                             <td>
-                                {% if s.estado_tramite == 'Pendiente' %}
-                                    <span class="badge bg-warning text-dark">Pendiente</span>
-                                {% elif s.estado_tramite == 'Aprobado' or s.estado_tramite == 'Liquidado' %}
-                                    <span class="badge bg-success">Completado</span>
+                                {% if s.estado_tramite == 'REPORTADO' %}
+                                    <span class="badge bg-warning text-dark">Reportado</span>
+                                {% elif s.estado_tramite == 'LIQUIDADO' %}
+                                    <span class="badge bg-success">Liquidado</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ s.estado_tramite }}</span>
                                 {% endif %}
@@ -97,19 +134,13 @@
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
 <script>
     $(document).ready(function() {
         $('#tablaSiniestrosAsociados').DataTable({
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-            },
+            "language": { "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
             "responsive": true,
-            // 'l' activa el selector de longitud (Length changing input control)
-            // 'f' activa el filtrado/buscador (Filtering input)
             "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rtip',
             "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
             "order": [[0, "desc"]] 
         });
     });

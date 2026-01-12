@@ -1,40 +1,33 @@
 {% extends 'master/masteranalista.html' %}
+{% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <style>
-    .card-stat { border-left: 4px solid #0d6efd; transition: transform 0.2s; }
-    .card-stat:hover { transform: translateY(-5px); }
     .detail-label { font-size: 0.75rem; letter-spacing: 0.5px; }
     .bg-gradient-primary { background: linear-gradient(45deg, #0d6efd, #0043a8); color: white; }
-    .table-hover tbody tr:hover { background-color: #f8f9fa; }
-
-    .admin-scroll-content {
-        overflow-y: visible !important; 
-        height: auto !important;
-        min-height: 100vh;
-    }
     
-    body, .main-content-admin {
-        overflow-y: auto !important;
-        height: auto !important;
-    }
+    /* Ajustes de scroll */
+    .admin-scroll-content { overflow-y: visible !important; height: auto !important; min-height: 100vh; }
+    body, .main-content-admin { overflow-y: auto !important; height: auto !important; }
 </style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid py-4">
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
             <h2 class="fw-bold mb-1">Expediente de Siniestro</h2>
-            <p class="text-muted"><i class="fas fa-hashtag me-1"></i> ID Gestión: <strong>{{ siniestro.id }}</strong> | Póliza: <span class="badge bg-secondary">{{ siniestro.poliza.numero_poliza }}</span></p>
+            <p class="text-muted mb-0">
+                <i class="fas fa-hashtag me-1"></i> ID Gestión: <strong>{{ siniestro.id }}</strong> | 
+                Póliza: <span class="badge bg-secondary">{{ siniestro.poliza.numero_poliza }}</span>
+            </p>
         </div>
-        <div class="col-md-4 text-md-end">
+        <div>
             <a href="{% url 'siniestros' %}" class="btn btn-light border shadow-sm me-2">
                 <i class="fas fa-chevron-left"></i> Volver
             </a>
-            <a href="{% url 'siniestro_edit' siniestro.id %}" class="btn btn-warning shadow-sm">
-                <i class="fas fa-edit"></i> Editar
+            <a href="{% url 'siniestro_edit' siniestro.id %}" class="btn btn-warning shadow-sm fw-bold">
+                <i class="fas fa-edit me-1"></i> Editar
             </a>
         </div>
     </div>
@@ -44,7 +37,7 @@
             
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h5 class="fw-bold"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Detalles del Evento</h5>
+                    <h5 class="fw-bold text-primary"><i class="fas fa-file-invoice-dollar me-2"></i>Detalles del Evento</h5>
                 </div>
                 <div class="card-body px-4">
                     <div class="row mb-4">
@@ -58,13 +51,13 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <span class="text-muted detail-label text-uppercase fw-bold">Monto Reclamado</span>
-                            <p class="h6 mt-1 text-success font-monospace">${{ siniestro.valor_reclamo|default:"0.00" }}</p>
+                            <p class="h6 mt-1 text-success font-monospace fw-bold">${{ siniestro.valor_reclamo|default:"0.00" }}</p>
                         </div>
                     </div>
                     
-                    <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="p-3 bg-light rounded-3 mb-4 border-start border-4 border-primary">
                         <span class="text-muted detail-label text-uppercase fw-bold d-block mb-2">Relato de la Causa</span>
-                        <p class="mb-0 italic">{{ siniestro.causa_siniestro }}</p>
+                        <p class="mb-0 fst-italic text-dark">{{ siniestro.causa_siniestro }}</p>
                     </div>
 
                     <div class="row">
@@ -72,9 +65,27 @@
                             <span class="text-muted detail-label text-uppercase fw-bold">Ubicación Registrada</span>
                             <p class="mt-1"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ siniestro.ubicacion_bien }}</p>
                         </div>
+                        
                         <div class="col-md-6 mb-3">
                             <span class="text-muted detail-label text-uppercase fw-bold">Responsable / Custodio</span>
-                            <p class="mt-1"><i class="fas fa-user-shield text-info me-2"></i>{{ siniestro.responsable_custodio }}</p>
+                            {% if siniestro.custodio %}
+                                <div class="mt-1 p-2 bg-white border rounded shadow-sm">
+                                    <p class="mb-0 fw-bold text-dark">
+                                        <i class="fas fa-user-shield text-info me-2"></i>{{ siniestro.custodio.nombre_completo }}
+                                    </p>
+                                    <div class="small text-muted ms-4 ps-1 mt-1">
+                                        <div><i class="fas fa-id-card me-1"></i> {{ siniestro.custodio.identificacion }}</div>
+                                        <div><i class="fas fa-building me-1"></i> {{ siniestro.custodio.departamento }}</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="mt-1 p-2 bg-light border rounded text-muted">
+                                    <i class="fas fa-user-slash me-2"></i> <span class="fst-italic">Sin asignar</span>
+                                    <div class="small mt-1 text-warning">
+                                        <i class="fas fa-exclamation-circle me-1"></i> Edite el siniestro para asignar uno.
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -82,10 +93,10 @@
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center pt-4 px-4 border-0">
-                    <h5 class="fw-bold mb-0"><i class="fas fa-folder-open text-primary me-2"></i>Expediente Digital</h5>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-folder-open text-warning me-2"></i>Expediente Digital</h5>
                     {% if siniestro.estado_tramite != 'LIQUIDADO' %}
-                    <button class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSubirDocumento">
-                        <i class="fas fa-upload me-1"></i> Subir Archivo
+                    <button class="btn btn-sm btn-outline-primary px-3 shadow-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalSubirDocumento">
+                        <i class="fas fa-cloud-upload-alt me-1"></i> Subir Archivo
                     </button>
                     {% endif %}
                 </div>
@@ -103,30 +114,21 @@
                             <tbody>
                                 {% for doc in documentos %}
                                 <tr>
-                                    <td><span class="badge bg-info-subtle text-info border border-info-subtle px-2">{{ doc.get_tipo_display }}</span></td>
+                                    <td><span class="badge bg-light text-dark border">{{ doc.get_tipo_display }}</span></td>
                                     <td class="small">{{ doc.descripcion|default:"---" }}</td>
-                                    <td class="small text-muted">{{ doc.fecha_subida|date:"d/m/Y H:i" }}</td>
+                                    <td class="small text-muted">{{ doc.fecha_subida|date:"d/m/Y" }}</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                                <i class="fas fa-external-link-alt me-1"></i> Abrir
-                                            </a>
-                                            {% if siniestro.estado_tramite != 'LIQUIDADO' %}
-                                                <form action="{% url 'eliminar_evidencia' doc.id %}" method="POST" class="d-inline">
-                                                {% csrf_token %}
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" 
-                                                        onclick="return confirm('¿Estás seguro de que deseas eliminar este documento permanentemente?');">
-                                                        <i class="fas fa-trash-alt me-1"></i> Eliminar
-                                                    </button>
-                                                </form>
-                                            {% endif %}
-                                        </div>
+                                        <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm btn-link text-primary"><i class="fas fa-external-link-alt"></i> Ver</a>
+                                        <form action="{% url 'eliminar_evidencia' doc.id %}" method="POST" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-link text-danger" onclick="return confirm('¿Eliminar?')"><i class="fas fa-trash"></i></button>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
                                     <td colspan="4" class="text-center py-4 text-muted">
-                                        <i class="fas fa-info-circle me-1"></i> No hay evidencias digitales cargadas.
+                                        <i class="fas fa-info-circle me-1"></i> No hay documentos cargados.
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -138,35 +140,31 @@
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white pt-4 px-4 border-0">
-                    <h5 class="fw-bold"><i class="fas fa-history text-primary me-2"></i>Otros Siniestros de esta Póliza</h5>
+                    <h6 class="fw-bold text-muted text-uppercase mb-0">Otros Siniestros de esta Póliza</h6>
                 </div>
                 <div class="card-body px-4">
                     <div class="table-responsive">
-                        <table id="tablaRelacionados" class="table table-hover align-middle w-100">
-                            <thead class="table-light text-muted small">
-                                <tr>
+                        <table class="table table-sm table-hover align-middle">
+                            <thead>
+                                <tr class="text-muted small">
                                     <th>ID</th>
                                     <th>FECHA</th>
                                     <th>TIPO</th>
                                     <th>ESTADO</th>
-                                    <th>ACCIÓN</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in siniestros_relacionados %}
                                 <tr>
                                     <td class="fw-bold">#{{ item.id }}</td>
-                                    <td>{{ item.fecha_siniestro|date:"Y-m-d" }}</td>
+                                    <td>{{ item.fecha_siniestro|date:"d/m/Y" }}</td>
                                     <td>{{ item.tipo_siniestro }}</td>
-                                    <td>
-                                        <span class="badge {% if item.estado_tramite == 'LIQUIDADO' %}bg-success{% else %}bg-info{% endif %}">
-                                            {{ item.estado_tramite }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'siniestro_detail' item.id %}" class="btn btn-sm btn-outline-secondary">Ver</a>
-                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ item.estado_tramite }}</span></td>
+                                    <td><a href="{% url 'siniestro_detail' item.id %}" class="btn btn-sm btn-light border"><i class="fas fa-arrow-right"></i></a></td>
                                 </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted small py-3">No hay otros siniestros.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -177,12 +175,13 @@
 
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 mb-4 bg-gradient-primary text-white">
-                <div class="card-body text-center py-4">
+                <div class="card-body text-center py-5">
                     <span class="detail-label text-uppercase fw-bold opacity-75">Estado de Tramitación</span>
-                    <h3 class="fw-bold mt-2 mb-3">{{ siniestro.estado_tramite }}</h3>
-                    <div class="progress bg-white bg-opacity-25" style="height: 10px;">
-                        <div class="progress-bar bg-white" role="progressbar" style="width: 60%"></div>
+                    <h2 class="fw-bold mt-2 mb-3">{{ siniestro.estado_tramite }}</h2>
+                    <div class="progress bg-white bg-opacity-25 rounded-pill" style="height: 8px;">
+                        <div class="progress-bar bg-white rounded-pill" role="progressbar" style="width: 40%"></div>
                     </div>
+                    <p class="small mt-3 mb-0 opacity-75">Tiempo transcurrido: 5 días</p>
                 </div>
             </div>
 
@@ -190,13 +189,13 @@
                 <div class="card-body">
                     <h6 class="fw-bold mb-3">Acciones de Control</h6>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary"><i class="fas fa-print me-2"></i>Imprimir Reporte</button>
-                        <button class="btn btn-outline-dark"><i class="fas fa-share-alt me-2"></i>Notificar Cliente</button>
-                        <hr>
+                        <button class="btn btn-outline-dark"><i class="fas fa-print me-2"></i>Imprimir Reporte</button>
+                        <button class="btn btn-outline-dark"><i class="fas fa-envelope me-2"></i>Notificar Cliente</button>
+                        <hr class="my-2">
                         <form method="post" action="{% url 'siniestro_delete' siniestro.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('¿Seguro?')">
-                                <i class="fas fa-trash me-2"></i>Borrar Expediente
+                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('¿Borrar expediente permanentemente?')">
+                                <i class="fas fa-trash-alt me-2"></i>Eliminar Expediente
                             </button>
                         </form>
                     </div>
@@ -206,56 +205,35 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalSubirDocumento" tabindex="-1" aria-labelledby="modalSubirDocumentoLabel" aria-hidden="true">
+<div class="modal fade" id="modalSubirDocumento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-primary text-white border-0">
-                <h5 class="modal-title fw-bold" id="modalSubirDocumentoLabel"><i class="fas fa-cloud-upload-alt me-2"></i>Cargar Evidencia</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Subir Documento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="{% url 'subir_evidencia' siniestro.id %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="modal-body p-4">
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Tipo de Documento</label>
+                        <label class="form-label fw-bold">Tipo</label>
                         {{ form_documento.tipo }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-primary">Archivo (PDF, Imagen)</label>
+                        <label class="form-label fw-bold">Archivo</label>
                         {{ form_documento.archivo }}
-                        <div class="form-text">Tamaño máximo: 5MB. Formatos: PDF, JPG, PNG.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nota aclaratoria</label>
+                        <label class="form-label fw-bold">Descripción</label>
                         {{ form_documento.descripcion }}
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4">Subir a MinIO</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Subir</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-<script>
-    $(document).ready(function() {
-        $('#tablaRelacionados').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-            },
-            "pageLength": 5,
-            "lengthMenu": [5, 10, 25],
-            "searching": true,
-            "info": false
-        });
-    });
-</script>
 {% endblock %}
