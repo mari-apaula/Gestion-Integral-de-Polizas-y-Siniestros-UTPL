@@ -25,6 +25,9 @@ from .views import (
     FiniquitoCreateView,
     lista_notificaciones,
     marcar_notificacion_leida,
+    buscar_custodios_ajax,
+    buscar_bienes_ajax,
+    
 )
 
 urlpatterns = [
@@ -78,4 +81,8 @@ urlpatterns = [
     
     path('notificaciones/', lista_notificaciones, name='lista_notificaciones'),
     path('notificaciones/leer/<int:notificacion_id>/', marcar_notificacion_leida, name='marcar_notificacion_leida'),
+
+    # Buscador custodio y bienes
+    path('ajax/buscar-custodios/', buscar_custodios_ajax, name='ajax_buscar_custodios'),
+    path('ajax/buscar-bienes/', buscar_bienes_ajax, name='ajax_buscar_bienes'),
 ]

@@ -54,16 +54,67 @@ class Broker(models.Model):
 
 class ResponsableCustodio(models.Model):
     """
-    Representa a la persona responsable del bien en la UTPL.
-    Reemplaza a la clase 'Asegurado' del diagrama original.
+    Representa a la persona responsable del bien (Custodio) en la UTPL.
+    Datos extraídos del Encabezado del Acta de Entrega.
     """
-    nombre_completo = models.CharField(max_length=150)
-    identificacion = models.CharField(max_length=20, unique=True)
+    nombre_completo = models.CharField(max_length=150, verbose_name="Custodio")
+    identificacion = models.CharField(max_length=20, unique=True, verbose_name="Cédula")
     correo = models.EmailField() 
-    departamento = models.CharField(max_length=100, blank=True, null=True)
+    departamento = models.CharField(max_length=100, blank=True, null=True, verbose_name="Departamento/Carrera")
     
+    # Campos nuevos agregados según la imagen del Acta
+    ciudad = models.CharField(max_length=100, blank=True, null=True, help_text="Ej: Loja - CPL")
+    edificio = models.CharField(max_length=100, blank=True, null=True, help_text="Ej: Edificio D")
+    puesto = models.CharField(max_length=150, blank=True, null=True, help_text="Ej: D4D06-6-PUESTO DE DOCENTE")
+
     def __str__(self):
         return f"{self.nombre_completo} ({self.identificacion})"
+    
+# ========================================================
+# 3. Bien
+# ========================================================
+
+class Bien(models.Model):
+    """
+    Representa los activos fijos asignados a un custodio.
+    Basado en la tabla del Acta de Entrega Recepción.
+    """
+    ESTADO_BIEN_CHOICES = [
+        ('B', 'Bueno'),
+        ('R', 'Regular'),
+        ('M', 'Malo'),
+    ]
+
+    # Relación: Un custodio tiene varios bienes (1 a 5)
+    custodio = models.ForeignKey(ResponsableCustodio, on_delete=models.CASCADE, related_name='bienes')
+
+    # Columnas extraídas de la imagen
+    codigo = models.CharField(max_length=50, unique=True, verbose_name="Código")
+    baan_v = models.CharField(max_length=50, blank=True, null=True, verbose_name="BAAN V")
+    detalle = models.TextField(verbose_name="Detalle / Descripción")
+    serie = models.CharField(max_length=100, blank=True, null=True, default='No aplica')
+    modelo = models.CharField(max_length=100, blank=True, null=True, default='No aplica')
+    marca = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Estado marcado con X en la imagen (B/R)
+    estado_fisico = models.CharField(max_length=1, choices=ESTADO_BIEN_CHOICES, default='B', verbose_name="Estado Físico")
+
+    def clean(self):
+        """Validación personalizada para limitar a 5 bienes por custodio"""
+        from django.core.exceptions import ValidationError
+        
+        # Si es un registro nuevo (no tiene ID aún) verificamos el conteo actual
+        if self.pk is None:
+            cantidad_actual = self.custodio.bienes.count()
+            if cantidad_actual >= 5:
+                raise ValidationError(f"El custodio {self.custodio.nombre_completo} ya tiene el máximo permitido de 5 bienes asignados.")
+
+    def save(self, *args, **kwargs):
+        self.clean() # Ejecutar validación antes de guardar
+        super(Bien, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.detalle[:30]}... ({self.codigo})"
 
 # ========================================================
 # 3. GESTIÓN DE PÓLIZAS
@@ -113,7 +164,7 @@ class Siniestro(models.Model):
     
     poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name='siniestros')
     
-    # Vinculación corregida con el custodio del bien
+    # Vinculación con el custodio (Responsable)
     custodio = models.ForeignKey(
         ResponsableCustodio, 
         on_delete=models.PROTECT, 
@@ -121,21 +172,27 @@ class Siniestro(models.Model):
         verbose_name="Responsable o Custodio"
     )
 
+    # NUEVO: Vinculación directa con el activo fijo afectado
+    bien = models.ForeignKey(
+        Bien, 
+        on_delete=models.PROTECT, 
+        related_name='siniestros',
+        verbose_name="Bien Afectado"
+    )
+
     usuario_gestor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
 
-    # Datos clave
+    # Datos del evento
     fecha_siniestro = models.DateField()
     fecha_notificacion = models.DateField(auto_now_add=True)
     tipo_siniestro = models.CharField(max_length=100)
-    ubicacion_bien = models.CharField(max_length=255)
-    causa_siniestro = models.TextField()
     
-    # Detalles del bien
-    nombre_bien = models.CharField(max_length=100)
-    marca = models.CharField(max_length=50, null=True, blank=True)
-    modelo = models.CharField(max_length=50, null=True, blank=True)
-    serie = models.CharField(max_length=50, null=True, blank=True)
-    codigo_activo = models.CharField(max_length=50, null=True, blank=True)
+    # Se mantiene 'ubicacion' porque el siniestro puede ocurrir fuera del puesto habitual del bien
+    ubicacion_bien = models.CharField(
+        max_length=255, 
+        help_text="Lugar exacto donde ocurrió el siniestro"
+    )
+    causa_siniestro = models.TextField()
 
     # Estado del Trámite
     ESTADO_CHOICES = [
@@ -151,8 +208,21 @@ class Siniestro(models.Model):
     # Valor estimado inicial
     valor_reclamo_estimado = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    def clean(self):
+        """
+        Validación opcional: Verificar que el Bien seleccionado 
+        realmente pertenezca al Custodio seleccionado.
+        """
+        from django.core.exceptions import ValidationError
+        if self.bien.custodio != self.custodio:
+            raise ValidationError(f"El bien '{self.bien.detalle}' no pertenece al custodio {self.custodio.nombre_completo}.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super(Siniestro, self).save(*args, **kwargs)
+
     def __str__(self):
-        return f"Siniestro {self.id} - {self.tipo_siniestro}"
+        return f"Siniestro {self.id} - {self.bien.detalle[:20]}..."
 
 # ========================================================
 # 5. LIQUIDACIÓN Y FINIQUITO
